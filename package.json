@@ -1,6 +1,6 @@
 {
   "name": "sophic-sw-webpack-plugin",
-  "version": "1.0.1-beta.0",
+  "version": "1.0.1",
   "description": "generate sw file for sophic",
   "main": "index.js",
   "repository": {
