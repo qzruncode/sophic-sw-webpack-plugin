@@ -1,0 +1,20 @@
+{
+  "name": "sophic-sw-webpack-plugin",
+  "version": "1.0.0",
+  "description": "generate sw file for sophic",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/qzruncode/sophic-sw-webpack-plugin.git"
+  },
+  "keywords": [
+    "webpack",
+    "sw",
+    "sophic"
+  ],
+  "author": "叶家伟",
+  "license": "ISC",
+  "dependencies": {
+    "fs-extra": "^10.0.0"
+  }
+}
