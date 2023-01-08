@@ -1,7 +1,3 @@
-// 本地chrome调试
-// /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --user-data-dir=/tmp/foo --ignore-certificate-errors --unsafely-treat-insecure-origin-as-secure=https://emonitor.local.elenet.me:3000/
-
-const chacheName = __chacheName__; // 更新缓存只需要修改 chacheName 版本号即可
 const expirationHour = Number(__expirationHour__);
 
 class MessageEntity {
@@ -108,18 +104,5 @@ self.addEventListener("fetch", (e) => {
 
 self.addEventListener("activate", (e) => {
   self.clients.claim();
-  e.waitUntil(
-    (async () => {
-      const keyList = await caches.keys();
-      await Promise.all(
-        keyList.map((key) => {
-          const exist = key === chacheName;
-          if (exist) {
-            caches.delete(key);
-          }
-        })
-      );
-      reportError("RefreshClient", null);
-    })()
-  );
+  reportError("RefreshClient", null);
 });
