@@ -1,7 +1,10 @@
+[![NPM version](https://img.shields.io/npm/v/sophic-sw-webpack-plugin.svg)](https://www.npmjs.com/package/sophic-sw-webpack-plugin)
+[![NPM package](https://img.shields.io/npm/dy/sophic-sw-webpack-plugin.svg)](https://www.npmjs.com/package/sophic-sw-webpack-plugin)
+
 ## sophic-sw-webpack-plugin
 
-1. 此插件为sophic而设计，用来生成sw文件，从而使用sophic中的sw缓存模式，存储微应用的静态资源
-2. 此插件最好在dark-tunnel脚手架中使用
+1. 此插件为[sophic](https://www.npmjs.com/package/sophic)而设计，用来生成sw文件，从而使用sophic中的sw缓存模式，存储微应用的静态资源
+2. 此插件最好在[dark-tunnel](https://www.npmjs.com/package/dark-tunnel)脚手架中使用
 3. 提供配置项expirationHour用来设置缓存时效，不建议过长
 
 ### 安装
@@ -13,7 +16,7 @@ npm install -D sophic-sw-webpack-plugin
 ### 使用
 
 ```
-在使用dark-tunnel的项目根目录新建 darkTunnel.config.js
+在使用dark-tunnel创建的项目根目录新建 darkTunnel.config.js
 
 const cachewebWebpackPlugin = require('sophic-sw-webpack-plugin');
 module.exports = [
@@ -28,7 +31,7 @@ module.exports = [
 ### 注册
 
 ```
-在使用dark-tunnel的项目根目录新建 static/registerSW.js
+在使用dark-tunnel创建的项目根目录新建 static/registerSW.js
 
 function registerSW() {
   if ("serviceWorker" in navigator) {
