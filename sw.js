@@ -1,7 +1,7 @@
 const expirationHour = Number(__expirationHour__);
 
 class MessageEntity {
-  constructor(type = "", data = "") {
+  constructor(type = '', data = '') {
     this.type = type;
     this.data = data;
   }
@@ -10,7 +10,7 @@ class MessageEntity {
 function reportError(type, msg) {
   const m = new MessageEntity(type, msg);
   self.clients.matchAll().then(function (clientList) {
-    clientList.forEach((client) => {
+    clientList.forEach(client => {
       client.postMessage(m);
     });
   });
@@ -18,20 +18,21 @@ function reportError(type, msg) {
 
 async function makeFetch(req) {
   return await fetch(req)
-    .then((res) => {
+    .then(res => {
       if (!res.ok) {
-        reportError("FetchError", res.statusText);
+        reportError('FetchError', res.statusText);
       }
       return res;
     })
-    .catch((err) => {
-      reportError("NetWorkError", err);
+    .catch(err => {
+      reportError('NetWorkError', err);
     });
 }
 
-async function handleCache (req, cacheName) {
+async function handleCache(req, cacheName) {
   const cachedState = await caches.match(req);
-  if(cachedState) {
+  if (cachedState) {
+    console.log('资源从缓存中读取：' + req.url);
     return cachedState;
   } else {
     // 如果缓存中不存在，从后台获取资源
@@ -48,7 +49,7 @@ async function saveReq(cacheName, req, res) {
   // 保存资源，未超出cache缓存数量，在header中保存字段，直接存入
   const cache = await caches.open(cacheName);
   const headers = new Headers(res.headers);
-  headers.append("sw-date", new Date().getTime()); // 保存资源的起始时间
+  headers.append('sw-date', new Date().getTime()); // 保存资源的起始时间
   const blob = await res.blob();
   const copyRes = new Response(blob, {
     status: res.status,
@@ -58,51 +59,61 @@ async function saveReq(cacheName, req, res) {
   return cache.put(req, copyRes);
 }
 
-async function deleteExpiredResponse(cacheName) {
-  const cache = await caches.open(cacheName);
-  const requests = await cache.keys();
-  const responses = [];
-  requests.forEach(key => {responses.push(cache.match(key))})
-  const responsesRes = await Promise.allSettled(responses);
-
-  responsesRes.forEach((response, index) => {
-    const status = response.status;
-    const headers = response.value.headers;
-    if (status === 'fulfilled' && headers.has("sw-date")) {
-      const dateTime = new Date(Number(headers.get("sw-date"))).getTime();
-      if (!isNaN(dateTime)) {
-        const now = Date.now();
-        const expirationSeconds = expirationHour * 60 * 60;
-        if (dateTime < now - expirationSeconds * 1000) {
-          // 已过期
-          const request = requests[index];
-          cache.delete(request);
-          console.log("过期了", request);
+async function deleteExpiredResponse() {
+  const cacheVersions = await caches.keys();
+  for (let i = 0; i < cacheVersions.length; i++) {
+    const cacheVersion = cacheVersions[i];
+    const responses = [];
+    const cache = await caches.open(cacheVersion);
+    const requests = await cache.keys();
+    requests.forEach(key => {
+      responses.push(cache.match(key));
+    });
+    const responsesRes = await Promise.allSettled(responses);
+    responsesRes.forEach((response, index) => {
+      const status = response.status;
+      const headers = response.value.headers;
+      if (status === 'fulfilled' && headers.has('sw-date')) {
+        const dateTime = new Date(Number(headers.get('sw-date'))).getTime();
+        if (!isNaN(dateTime)) {
+          const now = Date.now();
+          const expirationSeconds = expirationHour * 60 * 60;
+          if (dateTime < now - expirationSeconds * 1000) {
+            // 已过期
+            const request = requests[index];
+            cache.delete(request);
+            console.log('资源过期被移除：' + request.url);
+          }
         }
       }
-    }
-  })
+    });
+  }
 }
 
-self.addEventListener("fetch", (e) => {
+self.addEventListener('install', e => {
+  e.waitUntil(self.skipWaiting());
+});
+
+self.addEventListener('fetch', e => {
   e.respondWith(
     (async () => {
-      const res = await makeFetch(e.request);
-      if(res && res.url)  {
-        const url = new URL(res.url);
+      const req = e.request;
+      if (req && req.url) {
+        const url = new URL(req.url);
         const searchParams = url.searchParams;
-        if(searchParams.has('appType') && searchParams.get('appType') === 'sub') {
+        if (searchParams.has('appType') && searchParams.get('appType') === 'sub') {
           const cacheName = searchParams.get('appName');
-          await deleteExpiredResponse(cacheName);
-          await handleCache(e.request, cacheName);
+          return await handleCache(e.request, cacheName);
+        } else {
+          return await makeFetch(e.request);
         }
       }
-      return res;
     })()
   );
 });
 
-self.addEventListener("activate", (e) => {
+self.addEventListener('activate', e => {
   self.clients.claim();
-  reportError("RefreshClient", null);
+  deleteExpiredResponse();
+  reportError('RefreshClient', null);
 });
